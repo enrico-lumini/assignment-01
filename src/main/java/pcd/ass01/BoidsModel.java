@@ -47,27 +47,27 @@ public class BoidsModel {
     	return boids;
     }
     
-    public synchronized double getMinX() {
+    public /*synchronized*/ double getMinX() {
     	return -width/2;
     }
 
-    public synchronized double getMaxX() {
+    public /*synchronized*/ double getMaxX() {
     	return width/2;
     }
 
-    public synchronized double getMinY() {
+    public /*synchronized*/ double getMinY() {
     	return -height/2;
     }
 
-    public synchronized double getMaxY() {
+    public /*synchronized*/ double getMaxY() {
     	return height/2;
     }
     
-    public synchronized double getWidth() {
+    public /*synchronized*/ double getWidth() {
     	return width;
     }
  
-    public synchronized double getHeight() {
+    public /*synchronized*/ double getHeight() {
     	return height;
     }
 
@@ -83,27 +83,27 @@ public class BoidsModel {
     	this.cohesionWeight = value;
     }
 
-    public synchronized double getSeparationWeight() {
+    public /*synchronized*/ double getSeparationWeight() {
     	return separationWeight;
     }
 
-    public synchronized double getCohesionWeight() {
+    public /*synchronized*/ double getCohesionWeight() {
     	return cohesionWeight;
     }
 
-    public synchronized double getAlignmentWeight() {
+    public /*synchronized*/ double getAlignmentWeight() {
     	return alignmentWeight;
     }
     
-    public synchronized double getMaxSpeed() {
+    public /*synchronized*/ double getMaxSpeed() {
     	return maxSpeed;
     }
 
-    public synchronized double getAvoidRadius() {
+    public /*synchronized*/ double getAvoidRadius() {
     	return avoidRadius;
     }
 
-    public synchronized double getPerceptionRadius() {
+    public /*synchronized*/ double getPerceptionRadius() {
     	return perceptionRadius;
     }
 }

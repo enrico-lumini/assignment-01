@@ -4,7 +4,7 @@ import java.util.Optional;
 
 public class BoidsSimulator {
 
-    private BoidsModel model;
+    protected BoidsModel model;
     private Optional<BoidsView> view;
     
     private static final int FRAMERATE = 25;
@@ -22,44 +22,46 @@ public class BoidsSimulator {
     public void runSimulation() {
     	while (true) {
             var t0 = System.currentTimeMillis();
-    		var boids = model.getBoids();
-    		/*
-    		for (Boid boid : boids) {
-                boid.update(model);
-            }
-            */
-    		
-    		/* 
-    		 * Improved correctness: first update velocities...
-    		 */
-    		for (Boid boid : boids) {
-                boid.updateVelocity(model);
-            }
 
-    		/* 
-    		 * ..then update positions
-    		 */
-    		for (Boid boid : boids) {
-                boid.updatePos(model);
-            }
+            updateBoids(model);
 
-            
-    		if (view.isPresent()) {
-            	view.get().update(framerate);
-            	var t1 = System.currentTimeMillis();
-                var dtElapsed = t1 - t0;
-                var framratePeriod = 1000/FRAMERATE;
-                
-                if (dtElapsed < framratePeriod) {		
-                	try {
-                		Thread.sleep(framratePeriod - dtElapsed);
-                	} catch (Exception ex) {}
-                	framerate = FRAMERATE;
-                } else {
-                	framerate = (int) (1000/dtElapsed);
-                }
-    		}
-            
+            draw(t0);
     	}
+    }
+
+    public void updateBoids(BoidsModel model) {
+        var boids = model.getBoids();
+
+        /*
+         * Improved correctness: first update velocities...
+         */
+        for (Boid boid : boids) {
+            boid.updateVelocity(model);
+        }
+
+        /*
+         * ..then update positions
+         */
+        for (Boid boid : boids) {
+            boid.updatePos(model);
+        }
+    }
+
+    public void draw(long t0) {
+        if (view.isPresent()) {
+            view.get().update(framerate);
+            var t1 = System.currentTimeMillis();
+            var dtElapsed = t1 - t0;
+            var framratePeriod = 1000/FRAMERATE;
+
+            if (dtElapsed < framratePeriod) {
+                try {
+                    Thread.sleep(framratePeriod - dtElapsed);
+                } catch (Exception ex) {}
+                framerate = FRAMERATE;
+            } else {
+                framerate = (int) (1000/dtElapsed);
+            }
+        }
     }
 }
