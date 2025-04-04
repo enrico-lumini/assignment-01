@@ -40,7 +40,6 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
                 endFetchBoidsBarrier,
                 endUpdateBarrier
             );
-            System.out.println("Creating updater " + id + " with boids: " + boidsToUpdate.size());
             updaters.set(id, updater);
             updater.start();
         }
