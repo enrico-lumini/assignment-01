@@ -23,14 +23,14 @@ public class BoidsSimulator {
     	while (true) {
             var t0 = System.currentTimeMillis();
 
-            updateBoids(model);
+            updateBoids();
 
             draw(t0);
     	}
     }
 
-    public void updateBoids(BoidsModel model) {
-        var boids = model.getBoids();
+    public void updateBoids() {
+        var boids = this.model.getBoids();
 
         /*
          * Improved correctness: first update velocities...

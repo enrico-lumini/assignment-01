@@ -1,6 +1,7 @@
 package pcd.ass01;
 
-import pcd.ass01.utils.sync.CyclicBarrier;
+import pcd.ass01.utils.sync.SimpleBarrier;
+import pcd.ass01.utils.sync.SimulationBarriers;
 import pcd.ass01.workers.BatchBoidsUpdater;
 
 import java.util.Arrays;
@@ -10,9 +11,7 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
 
     private List<BatchBoidsUpdater> updaters;
 
-    private final CyclicBarrier startUpdateBarrier; // Barrier for starting the update process
-    private final CyclicBarrier endFetchBoidsBarrier; // Barrier for ending the fetch process (fetch boids)
-    private final CyclicBarrier endUpdateBarrier; // Barrier for ending the update process (velocity and position update)
+    private final SimulationBarriers barriers;
 
     public ParallelBoidsSimulator(BoidsModel model) {
         super(model);
@@ -20,10 +19,7 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
         updaters = Arrays.asList(new BatchBoidsUpdater[availableProcessors]);
-
-        startUpdateBarrier = new CyclicBarrier(availableProcessors + 1);
-        endFetchBoidsBarrier = new CyclicBarrier(availableProcessors);
-        endUpdateBarrier = new CyclicBarrier(availableProcessors + 1);
+        barriers = new SimulationBarriers(availableProcessors + 1);
 
         setupUpdaters();
     }
@@ -35,10 +31,9 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
             BatchBoidsUpdater updater = new BatchBoidsUpdater(
                 id,
                 model,
+                boids,
                 boidsToUpdate,
-                startUpdateBarrier,
-                endFetchBoidsBarrier,
-                endUpdateBarrier
+                barriers
             );
             updaters.set(id, updater);
             updater.start();
@@ -46,12 +41,15 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
     }
 
     @Override
-    public void updateBoids(BoidsModel model) {
-        startUpdate();
-        System.out.println("Starting update for all updaters");
+    public void updateBoids() {
+        awaitBarrier(barriers.neighbors);
 
-        waitUpdateEnd();
-        System.out.println("All updaters finished updating");
+        awaitBarrier(barriers.velocity);
+
+        awaitBarrier(barriers.position);
+
+        var boids = this.model.getBoids();
+        updaters.forEach(updater -> updater.setAllBoids(boids));
     }
 
     private List<Boid> getUpdaterBoids(List<Boid> boids, int updaterId) {
@@ -62,25 +60,9 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
         return boids.subList(start, end);
     }
 
-    /**
-     * Waits for all updaters to start the update process.
-     * This method is called before updating the velocity of the boids.
-     */
-    private void startUpdate() {
+    private void awaitBarrier(SimpleBarrier barrier) {
         try {
-            startUpdateBarrier.await();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Waits for all updaters to finish updating the position of the boids.
-     * This method is called after updating the position of the boids.
-     */
-    private void waitUpdateEnd() {
-        try {
-            endUpdateBarrier.await();
+            barrier.await();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

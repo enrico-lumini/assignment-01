@@ -2,7 +2,8 @@ package pcd.ass01.workers;
 
 import pcd.ass01.Boid;
 import pcd.ass01.BoidsModel;
-import pcd.ass01.utils.sync.CyclicBarrier;
+import pcd.ass01.utils.sync.SimpleBarrier;
+import pcd.ass01.utils.sync.SimulationBarriers;
 
 import java.util.List;
 
@@ -11,75 +12,67 @@ public class BatchBoidsUpdater extends Thread {
     private BoidsModel model;
 
     private List<Boid> boidsToUpdate;
+    private List<Boid> allBoids;
 
-    private final CyclicBarrier startUpdateBarrier;
-    private final CyclicBarrier endFetchBoidsBarrier;
-    private final CyclicBarrier endUpdateBarrier;
+    private final SimulationBarriers barriers;
 
     public BatchBoidsUpdater(
             int id,
             BoidsModel model,
+            List<Boid> allBoids,
             List<Boid> boidsToUpdate,
-            CyclicBarrier startUpdateBarrier,
-            CyclicBarrier endFetchBoidsBarrier,
-            CyclicBarrier endUpdateBarrier
+            SimulationBarriers barriers
     ) {
         super("BatchBoidUpdater-" + id);
         this.model = model;
+        this.allBoids = allBoids;
         this.boidsToUpdate = boidsToUpdate;
-        this.startUpdateBarrier = startUpdateBarrier;
-        this.endFetchBoidsBarrier = endFetchBoidsBarrier;
-        this.endUpdateBarrier = endUpdateBarrier;
+        this.barriers = barriers;
+    }
+
+    public void setAllBoids(List<Boid> allBoids) {
+        this.allBoids = allBoids;
     }
 
     @Override
     public void run() {
         while (true) {
-            waitStart();
+            updateBoidsList();
 
-            fetchBoids();
+            computeNearbyBoids();
+            awaitBarrier(barriers.neighbors);
 
-            waitFetchBoids();
+            updateVelocity();
+            awaitBarrier(barriers.velocity);
 
-            updateBoids();
-
-            endUpdate();
+            updatePosition();
+            awaitBarrier(barriers.position);
         }
     }
 
-    private void fetchBoids() {
-        boidsToUpdate.forEach(boid -> boid.fetchNearbyBoids(model));
+    private void updateBoidsList() {
+        boidsToUpdate.forEach(boid -> boid.setAllBoids(allBoids));
     }
 
-    private void updateBoids() {
+    private void computeNearbyBoids() {
+        boidsToUpdate.forEach(boid -> boid.computeNearbyBoids(model));
+    }
+
+    private void updateVelocity() {
         for (Boid boid : boidsToUpdate) {
             boid.updateVelocity(model);
+        }
+    }
+
+    private void updatePosition() {
+        for (Boid boid : boidsToUpdate) {
             boid.updatePos(model);
         }
     }
 
-    private void waitStart() {
+    private void awaitBarrier(SimpleBarrier barrier) {
         try {
-            System.out.println("Waiting for start barrier: " + this.getName());
-            startUpdateBarrier.await();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void waitFetchBoids() {
-        try {
-            System.out.println("Waiting for end velocity update: " + this.getName());
-            endFetchBoidsBarrier.await();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void endUpdate() {
-        try {
-            System.out.println("Notify for end update: " + this.getName());
-            endUpdateBarrier.await();
+            barrier.await();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
