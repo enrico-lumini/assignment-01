@@ -31,7 +31,6 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
             BatchBoidsUpdater updater = new BatchBoidsUpdater(
                 id,
                 model,
-                boids,
                 boidsToUpdate,
                 barriers
             );
@@ -47,9 +46,6 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
         awaitBarrier(barriers.velocity);
 
         awaitBarrier(barriers.position);
-
-        var boids = this.model.getBoids();
-        updaters.forEach(updater -> updater.setAllBoids(boids));
     }
 
     private List<Boid> getUpdaterBoids(List<Boid> boids, int updaterId) {

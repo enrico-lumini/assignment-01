@@ -36,3 +36,33 @@ public class SimpleBarrier {
         }
     }
 }
+
+//public class SimpleBarrier {
+//
+//    private final int parties;
+//    private int count = 0;
+//    private int released = 0;
+//
+//    public SimpleBarrier(int parties) {
+//        this.parties = parties;
+//    }
+//
+//    public synchronized void await() throws InterruptedException {
+//        count++;
+//        if (count == parties) {
+//            released = parties;
+//            count = 0;
+//            notifyAll(); // wake up all waiting threads
+//        } else {
+//            while (released == 0) {
+//                wait();
+//            }
+//        }
+//
+//        released--;
+//        if (released == 0) {
+//            // Last thread out resets the barrier
+//            notifyAll(); // optional, if you want to support re-use
+//        }
+//    }
+//}

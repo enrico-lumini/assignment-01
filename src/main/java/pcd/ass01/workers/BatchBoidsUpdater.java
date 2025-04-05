@@ -12,33 +12,24 @@ public class BatchBoidsUpdater extends Thread {
     private BoidsModel model;
 
     private List<Boid> boidsToUpdate;
-    private List<Boid> allBoids;
 
     private final SimulationBarriers barriers;
 
     public BatchBoidsUpdater(
             int id,
             BoidsModel model,
-            List<Boid> allBoids,
             List<Boid> boidsToUpdate,
             SimulationBarriers barriers
     ) {
         super("BatchBoidUpdater-" + id);
         this.model = model;
-        this.allBoids = allBoids;
         this.boidsToUpdate = boidsToUpdate;
         this.barriers = barriers;
-    }
-
-    public void setAllBoids(List<Boid> allBoids) {
-        this.allBoids = allBoids;
     }
 
     @Override
     public void run() {
         while (true) {
-            updateBoidsList();
-
             computeNearbyBoids();
             awaitBarrier(barriers.neighbors);
 
@@ -48,10 +39,6 @@ public class BatchBoidsUpdater extends Thread {
             updatePosition();
             awaitBarrier(barriers.position);
         }
-    }
-
-    private void updateBoidsList() {
-        boidsToUpdate.forEach(boid -> boid.setAllBoids(allBoids));
     }
 
     private void computeNearbyBoids() {

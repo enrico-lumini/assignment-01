@@ -8,7 +8,6 @@ public class Boid {
     private P2d pos;
     private V2d vel;
 
-    private List<Boid> allBoids;
     private List<Boid> nearbyBoids;
 
     public Boid(P2d pos, V2d vel) {
@@ -61,7 +60,7 @@ public class Boid {
     
     private List<Boid> getNearbyBoids(BoidsModel model) {
     	var list = new ArrayList<Boid>();
-        for (Boid other : this.allBoids) {
+        for (Boid other : model.getBoids()) {
         	if (other != this) {
         		P2d otherPos = other.getPos();
         		double distance = pos.distance(otherPos);
@@ -75,10 +74,6 @@ public class Boid {
 
     public void computeNearbyBoids(BoidsModel model) {
         this.nearbyBoids = getNearbyBoids(model);
-    }
-
-    public void setAllBoids(List<Boid> allBoids) {
-        this.allBoids = allBoids;
     }
     
     private V2d calculateAlignment(List<Boid> nearbyBoids) {
