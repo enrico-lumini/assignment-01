@@ -34,18 +34,39 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
                 boidsToUpdate,
                 barriers
             );
-            updaters.set(id, updater);
+            updaters.set(id, updater); // updaters[id] = updater;
             updater.start();
+        }
+    }
+
+    public void runSimulation() {
+        while (true) {
+            if(!model.isModelPaused()) {
+                var t0 = System.currentTimeMillis();
+
+                updateBoids();
+
+                draw(t0);
+            }
         }
     }
 
     @Override
     public void updateBoids() {
-        awaitBarrier(barriers.neighbors);
+        if (model.isBoidsNumberChanged()) {
+            model.updateBoids();
+            var newBoids = model.getBoids();
+            updaters.forEach(updater -> {
+                updater.setBoidsToUpdate(getUpdaterBoids(newBoids, updater.getUpdaterId()));
+            });
+        }
+        SimulationBarriers.awaitBarrier(barriers.boidsNumberChanged);
 
-        awaitBarrier(barriers.velocity);
+        SimulationBarriers.awaitBarrier(barriers.neighbors);
 
-        awaitBarrier(barriers.position);
+        SimulationBarriers.awaitBarrier(barriers.velocity);
+
+        SimulationBarriers.awaitBarrier(barriers.position);
     }
 
     private List<Boid> getUpdaterBoids(List<Boid> boids, int updaterId) {
@@ -54,13 +75,5 @@ public class ParallelBoidsSimulator extends BoidsSimulator {
         int start = updaterId * boidsPerUpdater;
         int end = (updaterId == updaters.size() - 1) ? totalBoids : start + boidsPerUpdater;
         return boids.subList(start, end);
-    }
-
-    private void awaitBarrier(SimpleBarrier barrier) {
-        try {
-            barrier.await();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }

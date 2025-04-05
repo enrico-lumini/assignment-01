@@ -9,6 +9,7 @@ import java.util.List;
 
 public class BatchBoidsUpdater extends Thread {
 
+    private final int id;
     private BoidsModel model;
 
     private List<Boid> boidsToUpdate;
@@ -22,6 +23,7 @@ public class BatchBoidsUpdater extends Thread {
             SimulationBarriers barriers
     ) {
         super("BatchBoidUpdater-" + id);
+        this.id = id;
         this.model = model;
         this.boidsToUpdate = boidsToUpdate;
         this.barriers = barriers;
@@ -30,15 +32,25 @@ public class BatchBoidsUpdater extends Thread {
     @Override
     public void run() {
         while (true) {
+            SimulationBarriers.awaitBarrier(barriers.boidsNumberChanged);
+
             computeNearbyBoids();
-            awaitBarrier(barriers.neighbors);
+            SimulationBarriers.awaitBarrier(barriers.neighbors);
 
             updateVelocity();
-            awaitBarrier(barriers.velocity);
+            SimulationBarriers.awaitBarrier(barriers.velocity);
 
             updatePosition();
-            awaitBarrier(barriers.position);
+            SimulationBarriers.awaitBarrier(barriers.position);
         }
+    }
+
+    public int getUpdaterId() {
+        return id;
+    }
+
+    public void setBoidsToUpdate(List<Boid> boidsToUpdate) {
+        this.boidsToUpdate = boidsToUpdate;
     }
 
     private void computeNearbyBoids() {
@@ -54,14 +66,6 @@ public class BatchBoidsUpdater extends Thread {
     private void updatePosition() {
         for (Boid boid : boidsToUpdate) {
             boid.updatePos(model);
-        }
-    }
-
-    private void awaitBarrier(SimpleBarrier barrier) {
-        try {
-            barrier.await();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 }

@@ -1,5 +1,6 @@
 package pcd.ass01;
 
+import java.util.List;
 import java.util.Optional;
 
 public class BoidsSimulator {
@@ -7,7 +8,7 @@ public class BoidsSimulator {
     protected BoidsModel model;
     private Optional<BoidsView> view;
     
-    private static final int FRAMERATE = 25;
+    private static final int FRAMERATE = 60;
     private int framerate;
     
     public BoidsSimulator(BoidsModel model) {
@@ -21,11 +22,13 @@ public class BoidsSimulator {
       
     public void runSimulation() {
     	while (true) {
-            var t0 = System.currentTimeMillis();
+            if(!model.isModelPaused()) {
+                var t0 = System.currentTimeMillis();
 
-            updateBoids();
+                updateBoids();
 
-            draw(t0);
+                draw(t0);
+            }
     	}
     }
 

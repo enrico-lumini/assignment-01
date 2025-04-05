@@ -17,6 +17,11 @@ public class BoidsModel {
     private final double perceptionRadius;
     private final double avoidRadius;
 
+    private boolean isModelPaused;
+
+    private boolean boidsNumberChanged;
+    private List<Boid> newBoids;
+
     public BoidsModel(int nboids,  
     						double initialSeparationWeight, 
     						double initialAlignmentWeight, 
@@ -26,28 +31,56 @@ public class BoidsModel {
     						double maxSpeed,
     						double perceptionRadius,
     						double avoidRadius){
-        separationWeight = initialSeparationWeight;
-        alignmentWeight = initialAlignmentWeight;
-        cohesionWeight = initialCohesionWeight;
+        this.separationWeight = initialSeparationWeight;
+        this.alignmentWeight = initialAlignmentWeight;
+        this.cohesionWeight = initialCohesionWeight;
         this.width = width;
         this.height = height;
         this.maxSpeed = maxSpeed;
         this.perceptionRadius = perceptionRadius;
         this.avoidRadius = avoidRadius;
-        
-    	boids = new ArrayList<>();
-        for (int i = 0; i < nboids; i++) {
-        	P2d pos = new P2d(-width/2 + Math.random() * width, -height/2 + Math.random() * height);
-        	V2d vel = new V2d(Math.random() * maxSpeed/2 - maxSpeed/4, Math.random() * maxSpeed/2 - maxSpeed/4);
-        	boids.add(new Boid(pos, vel));
-        }
 
+        this.isModelPaused = true;
+        this.boidsNumberChanged = false;
+        this.newBoids = new ArrayList<>();
+        
+    	this.boids = initBoid(nboids);
     }
-    
-    public synchronized List<Boid> getBoids(){
-    	return boids;
+
+    private List<Boid> initBoid(int nboids) {
+        var b = new ArrayList<Boid>();
+        for (int i = 0; i < nboids; i++) {
+            P2d pos = new P2d(-width/2 + Math.random() * width, -height/2 + Math.random() * height);
+            V2d vel = new V2d(Math.random() * maxSpeed/2 - maxSpeed/4, Math.random() * maxSpeed/2 - maxSpeed/4);
+            b.add(new Boid(pos, vel));
+        }
+        return b;
     }
-    
+
+//    public synchronized List<Boid> getBoids(){
+//    	return boids;
+//    }
+
+    public List<Boid> getBoids() {
+        return Collections.unmodifiableList(boids);
+    }
+
+    public void regenerateBoids(int nboids) {
+        newBoids.clear();
+        newBoids.addAll(initBoid(nboids));
+        boidsNumberChanged = true;
+    }
+
+    public boolean isBoidsNumberChanged() {
+        return boidsNumberChanged;
+    }
+
+    public void updateBoids() {
+        this.boids.clear();
+        this.boids.addAll(newBoids);
+        boidsNumberChanged = false;
+    }
+
     public /*synchronized*/ double getMinX() {
     	return -width/2;
     }
@@ -106,5 +139,13 @@ public class BoidsModel {
 
     public /*synchronized*/ double getPerceptionRadius() {
     	return perceptionRadius;
+    }
+
+    public synchronized boolean isModelPaused(){
+        return this.isModelPaused;
+    }
+
+    public synchronized void toggleSimulationPause(){
+        this.isModelPaused = !this.isModelPaused;
     }
 }
